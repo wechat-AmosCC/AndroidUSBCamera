@@ -22,6 +22,7 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.common.AbstractUVCCameraHandler;
 import com.serenegiant.usb.encoder.RecordParams;
 import com.serenegiant.usb.widget.CameraViewInterface;
+import com.serenegiant.usb.widget.UVCCameraTextureView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,10 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
     private Button btnPhoto,btnStartRec,btnStopRec,btnRotate;
     private UVCCameraHelper mCameraHelper;
     private CameraViewInterface mUVCCameraView;
+    private int int_rotion=0;
     private boolean isRequest;
     private boolean isPreview;
+    private UVCCameraTextureView uvcCameraTextureView;
 
     private UVCCameraHelper.OnMyDevConnectListener listener = new UVCCameraHelper.OnMyDevConnectListener() {
         @Override
@@ -130,12 +133,14 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         initButtons();
         checkPermission();
 
-        mUVCCameraView = findViewById(R.id.camera_view);
-        mUVCCameraView.setCallback(this);
+        uvcCameraTextureView =findViewById(R.id.camera_view);
+        uvcCameraTextureView.setCallback(this);
+       // mUVCCameraView = findViewById(R.id.camera_view);
+        //mUVCCameraView.setCallback(this);
 
         mCameraHelper = UVCCameraHelper.getInstance();
         mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
-        mCameraHelper.initUSBMonitor(this, mUVCCameraView, listener);
+        mCameraHelper.initUSBMonitor(this, uvcCameraTextureView, listener);
         mCameraHelper.setOnPreviewFrameListener(new AbstractUVCCameraHandler.OnPreViewResultListener() {
             @Override
             public void onPreviewResult(byte[] nv21Yuv) {
@@ -232,6 +237,12 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
             @Override
             public void onClick(View view) {
 
+                int_rotion+=90;
+                if(int_rotion>270)
+                {
+                    int_rotion=0;
+                }
+                uvcCameraTextureView.setRotation(int_rotion);
             }
         });
     }
@@ -255,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
     @Override
     public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
         if (!isPreview && mCameraHelper.isCameraOpened()) {
-            mCameraHelper.startPreview(mUVCCameraView);
+            mCameraHelper.startPreview(uvcCameraTextureView);
             isPreview = true;
         }
     }
