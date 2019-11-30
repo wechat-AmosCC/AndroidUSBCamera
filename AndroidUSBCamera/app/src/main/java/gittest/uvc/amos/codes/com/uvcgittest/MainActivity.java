@@ -31,10 +31,10 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
     private Button btnPhoto,btnStartRec,btnStopRec,btnRotate;
     private UVCCameraHelper mCameraHelper;
     private CameraViewInterface mUVCCameraView;
-    private int int_rotion=0;
     private boolean isRequest;
     private boolean isPreview;
     private UVCCameraTextureView uvcCameraTextureView;
+    private  int int_rotation=0;
 
     private UVCCameraHelper.OnMyDevConnectListener listener = new UVCCameraHelper.OnMyDevConnectListener() {
         @Override
@@ -133,10 +133,8 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         initButtons();
         checkPermission();
 
-        uvcCameraTextureView =findViewById(R.id.camera_view);
+        uvcCameraTextureView=findViewById(R.id.camera_view);
         uvcCameraTextureView.setCallback(this);
-       // mUVCCameraView = findViewById(R.id.camera_view);
-        //mUVCCameraView.setCallback(this);
 
         mCameraHelper = UVCCameraHelper.getInstance();
         mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
@@ -237,12 +235,12 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
             @Override
             public void onClick(View view) {
 
-                int_rotion+=90;
-                if(int_rotion>270)
+                int_rotation+=90;
+                if(int_rotation>270)
                 {
-                    int_rotion=0;
+                    int_rotation=0;
                 }
-                uvcCameraTextureView.setRotation(int_rotion);
+                uvcCameraTextureView.setRotation(int_rotation);
             }
         });
     }
