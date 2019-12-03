@@ -2,17 +2,26 @@ package gittest.uvc.amos.codes.com.uvcgittest;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
+import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.amos.codes.uvc.FileUtils;
@@ -28,13 +37,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements CameraDialog.CameraDialogParent, CameraViewInterface.Callback{
-    private Button btnPhoto,btnStartRec,btnStopRec,btnRotate;
+    private Button btnPhoto,btnStartRec,btnStopRec,btnRotate,btnStart,btnStop;
+    private  int int_rotation=0;
+    private RelativeLayout relativeVideo;
+
+
+
+    private UVCCameraTextureView uvcCameraTextureView;
     private UVCCameraHelper mCameraHelper;
-    private CameraViewInterface mUVCCameraView;
     private boolean isRequest;
     private boolean isPreview;
-    private UVCCameraTextureView uvcCameraTextureView;
-    private  int int_rotation=0;
+
 
     private UVCCameraHelper.OnMyDevConnectListener listener = new UVCCameraHelper.OnMyDevConnectListener() {
         @Override
@@ -126,16 +139,106 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE); //无标题
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initButtons();
-        checkPermission();
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN); //全屏
+        hideBottomUIMenu();  //隐藏虚拟按键
+        initButtons();  //初始化按钮事件
+        checkPermission();  //检查权限
+        initTextureViewSurface();  //初始化播放器控件
+    }
+    protected void hideBottomUIMenu() {
+        //隐藏虚拟按键，并且全屏
+        if (Build.VERSION.SDK_INT > 11 && Build.VERSION.SDK_INT < 19) { // lower api
+            View v = this.getWindow().getDecorView();
+            v.setSystemUiVisibility(View.GONE);
+        } else if (Build.VERSION.SDK_INT >= 19) {
 
-        uvcCameraTextureView=findViewById(R.id.camera_view);
+            Window _window = getWindow();
+            WindowManager.LayoutParams params = _window.getAttributes();
+            params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_IMMERSIVE;
+            _window.setAttributes(params);
+        }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // step.2 register USB event broadcast
+        if (mCameraHelper != null) {
+           //mCameraHelper.registerUSB();
+        }
+    }
+
+    @Override
+    public USBMonitor getUSBMonitor() {
+        return mCameraHelper.getUSBMonitor();
+    }
+
+    @Override
+    public void onDialogResult(boolean canceled) {
+        if (canceled) {
+            showShortMsg("取消操作");
+        }
+    }
+
+    public boolean isCameraOpened() {
+        return mCameraHelper.isCameraOpened();
+    }
+
+    @Override
+    public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
+    }
+
+    @Override
+    public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
+
+    }
+
+    @Override
+    public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
+        /*
+        if (isPreview && mCameraHelper.isCameraOpened()) {
+            mCameraHelper.stopPreview();
+            isPreview = false;
+        }*/
+    }
+
+
+
+
+
+    /**
+     * 初始化播放器的Surface
+     * 一个UVC专用的
+     */
+    public void initTextureViewSurface() {
+        WindowManager manager = this.getWindowManager();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(outMetrics);
+        int Screen_W = outMetrics.widthPixels;
+        final RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewPager.LayoutParams.MATCH_PARENT, ViewPager.LayoutParams.MATCH_PARENT);
+        relativeVideo = (RelativeLayout) findViewById(R.id.surface_layout);
+        int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        float topY = Screen_W * 1.25f;
+        int ph = (int) topY;
+        params.height = 768;
+        params.setMargins(0, 0, 0, 0);
+        params.width = 1024;
+        relativeVideo.setLayoutParams(params);
+
+
+
+
+        uvcCameraTextureView = new UVCCameraTextureView(this);
+        uvcCameraTextureView.setLayoutParams(params);
+        relativeVideo.addView(uvcCameraTextureView);
         uvcCameraTextureView.setCallback(this);
-
         mCameraHelper = UVCCameraHelper.getInstance();
         mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
         mCameraHelper.initUSBMonitor(this, uvcCameraTextureView, listener);
@@ -144,17 +247,16 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
             public void onPreviewResult(byte[] nv21Yuv) {
             }
         });
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // step.2 register USB event broadcast
         if (mCameraHelper != null) {
             mCameraHelper.registerUSB();
         }
+
     }
 
+    /**
+     * 按钮事件
+     */
     private void initButtons()
     {
         btnPhoto=(Button)findViewById(R.id.btn_TakePhoto);
@@ -234,7 +336,6 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         btnRotate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 int_rotation+=90;
                 if(int_rotation>270)
                 {
@@ -243,42 +344,27 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
                 uvcCameraTextureView.setRotation(int_rotation);
             }
         });
-    }
 
-    @Override
-    public USBMonitor getUSBMonitor() {
-        return mCameraHelper.getUSBMonitor();
-    }
+        btnStart=(Button)findViewById(R.id.btn_start);
+        btnStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!isPreview && mCameraHelper.isCameraOpened()) {
+                    mCameraHelper.startPreview(uvcCameraTextureView);
+                    isPreview = true;
+                }
+            }
+        });
 
-    @Override
-    public void onDialogResult(boolean canceled) {
-        if (canceled) {
-            showShortMsg("取消操作");
-        }
-    }
-
-    public boolean isCameraOpened() {
-        return mCameraHelper.isCameraOpened();
-    }
-
-    @Override
-    public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
-        if (!isPreview && mCameraHelper.isCameraOpened()) {
-            mCameraHelper.startPreview(uvcCameraTextureView);
-            isPreview = true;
-        }
-    }
-
-    @Override
-    public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
-
-    }
-
-    @Override
-    public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
-        if (isPreview && mCameraHelper.isCameraOpened()) {
-            mCameraHelper.stopPreview();
-            isPreview = false;
-        }
+        btnStop=(Button)findViewById(R.id.btn_stop);
+        btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isPreview && mCameraHelper.isCameraOpened()) {
+                    mCameraHelper.stopPreview();
+                    isPreview = false;
+                }
+            }
+        });
     }
 }

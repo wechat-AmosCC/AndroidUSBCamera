@@ -2,19 +2,33 @@
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        xmlns:tools="http://schemas.android.com/tools"
-        tools:context=".MainActivity"
+        android:layout_height="match_parent">
+    <RelativeLayout
+        android:id="@+id/surface_layout"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- 宽高可以自行调整 -->
-        <com.serenegiant.usb.widget.UVCCameraTextureView
-            android:id="@+id/camera_view"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            android:layout_gravity="center"
-            tools:ignore="MissingConstraints"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="36dp" />
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="26dp"
+            android:layout_marginBottom="42dp"
+            android:text="开始预览" />
+
+        <Button
+            android:id="@+id/btn_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="25dp"
+            android:layout_marginBottom="22dp"
+            android:text="停止预览" />
+    </RelativeLayout>
+
 
         <Button
             android:id="@+id/btn_TakePhoto"
