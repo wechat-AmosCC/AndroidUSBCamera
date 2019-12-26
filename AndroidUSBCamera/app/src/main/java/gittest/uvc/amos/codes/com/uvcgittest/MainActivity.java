@@ -2,11 +2,15 @@ package gittest.uvc.amos.codes.com.uvcgittest;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -18,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -35,13 +40,13 @@ import com.serenegiant.usb.widget.UVCCameraTextureView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements CameraDialog.CameraDialogParent, CameraViewInterface.Callback{
     private Button btnPhoto,btnStartRec,btnStopRec,btnRotate,btnStart,btnStop;
     private  int int_rotation=0;
     private RelativeLayout relativeVideo;
-
-
 
     private UVCCameraTextureView uvcCameraTextureView;
     private UVCCameraHelper mCameraHelper;
@@ -75,13 +80,20 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
                 showShortMsg("fail to connect,please check resolution params");
                 isPreview = false;
             } else {
-                isPreview = true;
-                showShortMsg("connecting");
+                //isPreview = true;
+                /*
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
+
                             Thread.sleep(2500);
+
+
+
+
+
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -90,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
                         }
                         Looper.loop();
                     }
-                }).start();
+                }).start();  */
             }
         }
         @Override
@@ -152,6 +164,8 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         initButtons();  //初始化按钮事件
         checkPermission();  //检查权限
         initTextureViewSurface();  //初始化播放器控件
+
+
     }
     protected void hideBottomUIMenu() {
         //隐藏虚拟按键，并且全屏
@@ -169,10 +183,11 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
     @Override
     protected void onStart() {
         super.onStart();
+        /*
         // step.2 register USB event broadcast
         if (mCameraHelper != null) {
-           //mCameraHelper.registerUSB();
-        }
+           mCameraHelper.registerUSB();
+        }*/
     }
 
     @Override
@@ -197,16 +212,10 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
 
     @Override
     public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
-
     }
 
     @Override
     public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
-        /*
-        if (isPreview && mCameraHelper.isCameraOpened()) {
-            mCameraHelper.stopPreview();
-            isPreview = false;
-        }*/
     }
 
 

@@ -38,7 +38,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation (name: 'libusbcamera-release', ext: 'aar')
+    implementation (name: 'libusbcamera-release2.0', ext: 'aar')
     api("com.serenegiant:common:2.12.4") {
         exclude module: 'support-v4'
     }
