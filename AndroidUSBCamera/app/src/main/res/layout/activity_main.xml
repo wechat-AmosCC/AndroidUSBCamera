@@ -3,31 +3,17 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-    <RelativeLayout
+
+        <RelativeLayout
         android:id="@+id/surface_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
-            android:id="@+id/btn_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        android:layout_height="match_parent"
             android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="26dp"
-            android:layout_marginBottom="42dp"
-            android:text="开始预览" />
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp">
 
-        <Button
-            android:id="@+id/btn_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="25dp"
-            android:layout_marginBottom="22dp"
-            android:text="停止预览" />
-    </RelativeLayout>
+        </RelativeLayout>
 
 
         <Button
@@ -68,5 +54,52 @@
             android:layout_marginBottom="33dp"
             android:text="旋转" />
 
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="38dp"
+            android:layout_marginBottom="44dp"
+            android:text="开始预览" />
 
-    </RelativeLayout>
+    <Button
+        android:id="@+id/btn_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="31dp"
+        android:layout_marginBottom="32dp"
+        android:text="停止预览" />
+
+    <Button
+        android:id="@+id/release"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/surface_layout"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="154dp"
+        android:text="Release" />
+
+    <Button
+        android:id="@+id/clearDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="9dp"
+        android:layout_marginBottom="155dp"
+        android:text="清空画布" />
+
+    <Button
+        android:id="@+id/restart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/release"
+        android:layout_centerHorizontal="true"
+        android:text="ReStart" />
+
+
+</RelativeLayout>

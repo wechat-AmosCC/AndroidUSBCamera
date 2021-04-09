@@ -38,13 +38,14 @@ import com.serenegiant.usb.encoder.RecordParams;
 import com.serenegiant.usb.widget.CameraViewInterface;
 import com.serenegiant.usb.widget.UVCCameraTextureView;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements CameraDialog.CameraDialogParent, CameraViewInterface.Callback{
-    private Button btnPhoto,btnStartRec,btnStopRec,btnRotate,btnStart,btnStop;
+    private Button btnPhoto,btnStartRec,btnStopRec,btnRotate,btnStart,btnStop,btnRelease,btnReStart,btnClearDisplay;
     private  int int_rotation=0;
     private RelativeLayout relativeVideo;
 
@@ -80,29 +81,6 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
                 showShortMsg("fail to connect,please check resolution params");
                 isPreview = false;
             } else {
-                //isPreview = true;
-                /*
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-
-                            Thread.sleep(2500);
-
-
-
-
-
-
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        Looper.prepare();
-                        if(mCameraHelper != null && mCameraHelper.isCameraOpened()) {
-                        }
-                        Looper.loop();
-                    }
-                }).start();  */
             }
         }
         @Override
@@ -110,41 +88,49 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
             showShortMsg("disconnecting");
         }
     };
-    String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-    List<String> mPermissionList = new ArrayList<>();
-    private static final int PERMISSION_REQUEST = 1;
-    private void checkPermission() {
-        mPermissionList.clear();
-        //判断哪些权限未授予
-        for (int i = 0; i < permissions.length; i++) {
-            if (ContextCompat.checkSelfPermission(this, permissions[i]) != PackageManager.PERMISSION_GRANTED) {
-                mPermissionList.add(permissions[i]);
+    private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+    };
+    private static final int REQUEST_CODE = 1;
+    private List<String> mMissPermissions = new ArrayList<>();
+
+    private boolean isVersionM() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+    }
+
+    private void checkAndRequestPermissions() {
+        mMissPermissions.clear();
+        for (String permission : REQUIRED_PERMISSION_LIST) {
+            int result = ContextCompat.checkSelfPermission(this, permission);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                mMissPermissions.add(permission);
             }
         }
-        /**
-         * 判断是否为空
-         */
-        if (mPermissionList.isEmpty()) {//未授予的权限为空，表示都授予了
-
-        } else {//请求权限方法
-            String[] permissions = mPermissionList.toArray(new String[mPermissionList.size()]);//将List转为数组
-            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST);
+        // check permissions has granted
+        if (mMissPermissions.isEmpty()) {
+            //startMainActivity();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    mMissPermissions.toArray(new String[mMissPermissions.size()]),
+                    REQUEST_CODE);
         }
     }
-    /**
-     * 响应授权
-     * 这里不管用户是否拒绝，都进入首页，不再重复申请权限
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case PERMISSION_REQUEST:
 
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                break;
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            for (int i = grantResults.length - 1; i >= 0; i--) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    mMissPermissions.remove(permissions[i]);
+                }
+            }
+        }
+        // Get permissions success or not
+        if (mMissPermissions.isEmpty()) {
+        } else {
         }
     }
     private void showShortMsg(String msg) {
@@ -162,7 +148,10 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN); //全屏
         hideBottomUIMenu();  //隐藏虚拟按键
         initButtons();  //初始化按钮事件
-        checkPermission();  //检查权限
+        if(isVersionM())
+        {
+            checkAndRequestPermissions();
+        }
         initTextureViewSurface();  //初始化播放器控件
 
 
@@ -183,11 +172,6 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
     @Override
     protected void onStart() {
         super.onStart();
-        /*
-        // step.2 register USB event broadcast
-        if (mCameraHelper != null) {
-           mCameraHelper.registerUSB();
-        }*/
     }
 
     @Override
@@ -248,15 +232,17 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         uvcCameraTextureView.setLayoutParams(params);
         relativeVideo.addView(uvcCameraTextureView);
         uvcCameraTextureView.setCallback(this);
-        mCameraHelper = UVCCameraHelper.getInstance();
-        mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
-        mCameraHelper.initUSBMonitor(this, uvcCameraTextureView, listener);
-        mCameraHelper.setOnPreviewFrameListener(new AbstractUVCCameraHandler.OnPreViewResultListener() {
-            @Override
-            public void onPreviewResult(byte[] nv21Yuv) {
-            }
-        });
+        if(mCameraHelper==null) {
+            mCameraHelper = UVCCameraHelper.getInstance();
+            mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
+            mCameraHelper.initUSBMonitor(this, uvcCameraTextureView, listener);
+            mCameraHelper.setOnPreviewFrameListener(new AbstractUVCCameraHandler.OnPreViewResultListener() {
+                @Override
+                public void onPreviewResult(byte[] nv21Yuv) {
+                }
+            });
 
+        }
         if (mCameraHelper != null) {
             mCameraHelper.registerUSB();
         }
@@ -268,6 +254,42 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
      */
     private void initButtons()
     {
+        btnClearDisplay=findViewById(R.id.clearDisplay);
+        btnClearDisplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mCameraHelper.stopPreview();
+                relativeVideo.removeAllViews();
+            }
+        });
+        btnRelease=findViewById(R.id.release);
+        btnRelease.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                relativeVideo.removeAllViews();
+                mCameraHelper.release();
+            }
+        });
+
+        btnReStart=findViewById(R.id.restart);
+        btnReStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                initTextureViewSurface();
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        //code by amos
+                        mCameraHelper.startPreview(uvcCameraTextureView);
+                        isPreview = true;
+                    }
+                }, 5000);//1秒后执行Runnable中的run方法
+
+            }
+        });
+
+
         btnPhoto=(Button)findViewById(R.id.btn_TakePhoto);
         btnPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -300,20 +322,16 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
                 if (!mCameraHelper.isPushing()) {
                     String videoPath = "/sdcard/iScopePro/" + "image/" + System.currentTimeMillis();
                     FileUtils.createfile(FileUtils.ROOT_PATH + "test666.h264");
-                    // if you want to record,please create RecordParams like this
                     RecordParams params = new RecordParams();
                     params.setRecordPath(videoPath);
                     params.setRecordDuration(0);                        // 设置为0，不分割保存
-                    // params.setVoiceClose(mSwitchVoice.isChecked());    // is close voice
                     params.setVoiceClose(true);
                     mCameraHelper.startPusher(params, new AbstractUVCCameraHandler.OnEncodeResultListener() {
                         @Override
                         public void onEncodeResult(byte[] data, int offset, int length, long timestamp, int type) {
-                            // type = 1,h264 video stream
                             if (type == 1) {
                                 FileUtils.putFileStream(data, offset, length);
                             }
-                            // type = 0,aac audio stream
                             if (type == 0) {
 
                             }
@@ -358,10 +376,8 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!isPreview && mCameraHelper.isCameraOpened()) {
-                    mCameraHelper.startPreview(uvcCameraTextureView);
-                    isPreview = true;
-                }
+                mCameraHelper.startPreview(uvcCameraTextureView);
+                isPreview = true;
             }
         });
 
@@ -369,11 +385,10 @@ public class MainActivity extends AppCompatActivity implements CameraDialog.Came
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isPreview && mCameraHelper.isCameraOpened()) {
-                    mCameraHelper.stopPreview();
-                    isPreview = false;
-                }
+                mCameraHelper.stopPreview();
+                isPreview = false;
             }
         });
     }
+
 }
